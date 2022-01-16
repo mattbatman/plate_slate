@@ -1,10 +1,11 @@
 defmodule PlateSlateWeb.Schema do
   use Absinthe.Schema
-  import_types(__MODULE__.OrderingTypes)
 
   alias PlateSlateWeb.Resolvers
+  alias PlateSlateWeb.Schema.Middleware
 
   import_types(__MODULE__.MenuTypes)
+  import_types(__MODULE__.OrderingTypes)
 
   query do
     # Other query fields
@@ -40,7 +41,16 @@ defmodule PlateSlateWeb.Schema do
     field :create_menu_item, :menu_item_result do
       arg(:input, non_null(:menu_item_input))
       resolve(&Resolvers.Menu.create_item/3)
+      middleware(Middleware.ChangesetErrors)
     end
+  end
+
+  def middleware(middleware, _field, %{identifier: :mutation}) do
+    middleware ++ [Middleware.ChangesetErrors]
+  end
+
+  def middleware(middleware, _field, _objects) do
+    middleware
   end
 
   subscription do
