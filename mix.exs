@@ -34,6 +34,8 @@ defmodule PlateSlate.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:comeonin_ecto_password, "~> 3.0.0"},
+      {:pbkdf2_elixir, "~> 1.4"},
       {:phoenix, "~> 1.6.2"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
