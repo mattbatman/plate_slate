@@ -6,6 +6,7 @@ defmodule PlateSlateWeb.Schema do
 
   import_types(__MODULE__.MenuTypes)
   import_types(__MODULE__.OrderingTypes)
+  import_types(__MODULE__.AccountsTypes)
 
   query do
     # Other query fields
@@ -23,6 +24,13 @@ defmodule PlateSlateWeb.Schema do
   end
 
   mutation do
+    field :login, :session do
+      arg(:email, non_null(:string))
+      arg(:password, non_null(:string))
+      arg(:role, non_null(:role))
+      resolve(&Resolvers.Accounts.login/3)
+    end
+
     field :ready_order, :order_result do
       arg(:id, non_null(:id))
       resolve(&Resolvers.Ordering.ready_order/3)
