@@ -1,5 +1,5 @@
 defmodule PlateSlateWeb.Context do
-  @behavior Plug
+  @behaviour Plug
   import Plug.Conn
 
   def init(opts), do: opts
