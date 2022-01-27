@@ -4,6 +4,33 @@ defmodule PlateSlateWeb.Schema do
   alias PlateSlateWeb.Resolvers
   alias PlateSlateWeb.Schema.Middleware
 
+  def middleware(middleware, field, object) do
+    middleware
+    |> apply(:errors, field, object)
+    |> apply(:get_string, field, object)
+    |> apply(:debug, field, object)
+  end
+
+  defp apply(middleware, :errors, _field, %{identifier: :mutation}) do
+    middleware ++ [Middleware.ChangesetErrors]
+  end
+
+  defp apply([], :get_string, field, %{identifier: :allergy_info}) do
+    [{Absinthe.Middleware.MapGet, to_string(field.identifier)}]
+  end
+
+  defp apply(middleware, :debug, _field, _object) do
+    if System.get_env("DEBUG") do
+      [{Middleware.Debug, :start}] ++ middleware
+    else
+      middleware
+    end
+  end
+
+  defp apply(middleware, _, _, _) do
+    middleware
+  end
+
   import_types(__MODULE__.MenuTypes)
   import_types(__MODULE__.OrderingTypes)
   import_types(__MODULE__.AccountsTypes)
@@ -13,6 +40,8 @@ defmodule PlateSlateWeb.Schema do
       middleware(Middleware.Authorize, :any)
       resolve(&Resolvers.Accounts.me/3)
     end
+
+    # Other query fields
 
     field :menu_items, list_of(:menu_item) do
       arg(:filter, :menu_item_filter)
@@ -61,21 +90,6 @@ defmodule PlateSlateWeb.Schema do
       middleware(Middleware.Authorize, "employee")
       resolve(&Resolvers.Menu.create_item/3)
     end
-  end
-
-  def middleware(middleware, field, %{identifier: :allergy_info} = object) do
-    new_middleware = {Absinthe.Middleware.MapGet, to_string(field.identifier)}
-
-    middleware
-    |> Absinthe.Schema.replace_default(new_middleware, field, object)
-  end
-
-  def middleware(middleware, _field, %{identifier: :mutation}) do
-    middleware ++ [Middleware.ChangesetErrors]
-  end
-
-  def middleware(middleware, _field, _objects) do
-    middleware
   end
 
   subscription do

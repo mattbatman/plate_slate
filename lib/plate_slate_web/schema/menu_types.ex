@@ -1,11 +1,3 @@
-# ---
-# Excerpted from "Craft GraphQL APIs in Elixir with Absinthe",
-# published by The Pragmatic Bookshelf.
-# Copyrights apply to this code. It may not be used to create training material,
-# courses, books, articles, and the like. Contact us if you are in doubt.
-# We make no guarantees that this code is fit for any purpose.
-# Visit http://www.pragmaticprogrammer.com/titles/wwgraphql for more book information.
-# ---
 defmodule PlateSlateWeb.Schema.MenuTypes do
   use Absinthe.Schema.Notation
 
@@ -74,6 +66,10 @@ defmodule PlateSlateWeb.Schema.MenuTypes do
     field :price, :decimal
     field :added_on, :date
     field :allergy_info, list_of(:allergy_info)
+
+    field :category, :category do
+      resolve(&Resolvers.Menu.category_for_item/3)
+    end
   end
 
   object :allergy_info do
