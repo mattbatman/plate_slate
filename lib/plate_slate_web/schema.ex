@@ -4,21 +4,6 @@ defmodule PlateSlateWeb.Schema do
   alias PlateSlateWeb.Resolvers
   alias PlateSlateWeb.Schema.Middleware
 
-  def plugins do
-    [Absinthe.Middleware.Dataloader | Absinthe.Plugin.defaults()]
-  end
-
-  def dataloader() do
-    alias PlateSlate.Menu
-
-    Dataloader.new()
-    |> Dataloader.add_source(Menu, Menu.data())
-  end
-
-  def context(ctx) do
-    Map.put(ctx, :loader, dataloader())
-  end
-
   def middleware(middleware, field, object) do
     middleware
     |> apply(:errors, field, object)
@@ -46,9 +31,25 @@ defmodule PlateSlateWeb.Schema do
     middleware
   end
 
+  def plugins do
+    [Absinthe.Middleware.Dataloader | Absinthe.Plugin.defaults()]
+  end
+
+  def dataloader() do
+    alias PlateSlate.Menu
+
+    Dataloader.new()
+    |> Dataloader.add_source(Menu, Menu.data())
+  end
+
+  def context(ctx) do
+    Map.put(ctx, :loader, dataloader())
+  end
+
   import_types(__MODULE__.MenuTypes)
   import_types(__MODULE__.OrderingTypes)
   import_types(__MODULE__.AccountsTypes)
+  import_types(Absinthe.Phoenix.Types)
 
   query do
     field :me, :user do
@@ -179,5 +180,25 @@ defmodule PlateSlateWeb.Schema do
   enum :sort_order do
     value(:asc)
     value(:desc)
+  end
+
+  # only needed due to bug in absinthe_phoenix at present -->
+  # https://github.com/absinthe-graphql/absinthe_phoenix/issues/73
+  directive :action do
+    on([:query, :mutation, :subscription])
+    arg(:mode, non_null(:action_mode))
+
+    expand(fn %{mode: mode}, node ->
+      Absinthe.Blueprint.put_flag(node, {:action, mode}, __MODULE__)
+    end)
+  end
+
+  directive :put do
+    on([:field, :fragment_spread, :inline_fragment])
+
+    expand(fn
+      _, node ->
+        Absinthe.Blueprint.put_flag(node, :put, __MODULE__)
+    end)
   end
 end
