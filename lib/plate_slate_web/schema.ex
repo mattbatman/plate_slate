@@ -57,7 +57,10 @@ defmodule PlateSlateWeb.Schema do
       resolve(&Resolvers.Accounts.me/3)
     end
 
-    # Other query fields
+    field :menu_item, :menu_item do
+      arg(:id, non_null(:id))
+      resolve(&Resolvers.Menu.get_item/3)
+    end
 
     field :menu_items, list_of(:menu_item) do
       arg(:filter, :menu_item_filter)

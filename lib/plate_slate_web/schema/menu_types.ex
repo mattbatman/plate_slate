@@ -3,6 +3,8 @@ defmodule PlateSlateWeb.Schema.MenuTypes do
 
   import Absinthe.Resolution.Helpers
   alias PlateSlate.Menu
+  alias PlateSlateWeb.Resolvers
+  alias PlateSlateWeb.Schema.Middleware
 
   object :menu_item_result do
     field :menu_item, :menu_item
@@ -71,6 +73,27 @@ defmodule PlateSlateWeb.Schema.MenuTypes do
     field :added_on, :date
     field :allergy_info, list_of(:allergy_info)
     field :category, :category, resolve: dataloader(Menu)
+
+    field :order_history, :order_history do
+      arg(:since, :date)
+      middleware(Middleware.Authorize, "employee")
+      resolve(&Resolvers.Ordering.order_history/3)
+    end
+  end
+
+  object :order_history do
+    field :orders, list_of(:order) do
+      resolve(&Resolvers.Ordering.orders/3)
+    end
+
+    field :quantity, non_null(:integer) do
+      resolve(Resolvers.Ordering.stat(:quantity))
+    end
+
+    @desc "Gross Revenue"
+    field :gross, non_null(:float) do
+      resolve(Resolvers.Ordering.stat(:gross))
+    end
   end
 
   object :allergy_info do

@@ -1,6 +1,33 @@
 defmodule PlateSlateWeb.Resolvers.Ordering do
   alias PlateSlate.Ordering
 
+  import Absinthe.Resolution.Helpers
+
+  def order_history(item, args, _) do
+    one_month_ago = Date.utc_today() |> Date.add(-30)
+
+    args =
+      Map.update(args, :since, one_month_ago, fn date ->
+        date || one_month_ago
+      end)
+
+    {:ok, %{item: item, args: args}}
+  end
+
+  def orders(%{item: item, args: args}, _, _) do
+    batch({Ordering, :orders_by_item_name, args}, item.name, fn orders ->
+      {:ok, Map.get(orders, item.name, [])}
+    end)
+  end
+
+  def stat(stat) do
+    fn %{item: item, args: args}, _, _ ->
+      batch({Ordering, :orders_stats_by_name, args}, item.name, fn results ->
+        {:ok, results[item.name][stat] || 0}
+      end)
+    end
+  end
+
   def ready_order(_, %{id: id}, _) do
     order = Ordering.get_order!(id)
 
